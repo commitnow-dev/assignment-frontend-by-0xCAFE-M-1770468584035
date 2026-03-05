@@ -7,7 +7,7 @@ type ResultItem = {
 };
 
 function App() {
-  // const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [isOpen, setOpen] = useState(false);
@@ -95,38 +95,25 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // debounce 방법1 - React 라이프사이클 이용
-  useEffect(() => {
+  // 디바운싱
+  const debounce = (value: string) => {
     setHighlightIdx(-1);
     setOpen(false);
 
-    if (inputValue) {
+    if (!!timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    if (!!value) {
       setLoading(true);
-      const timer = setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setOpen(true);
         search(inputValue);
         setLoading(false);
-      }, 300);
-
-      return () => {
-        clearTimeout(timer);
-      }
+      }, 300)
     }
 
-  }, [inputValue]);
-
-  // debounce 방법2 - ref 사용
-  // const debounce = (value: string) => {
-  //   setInputValue(value);
-
-  //   if (!!timerRef.current) {
-  //     clearTimeout(timerRef.current);
-  //   }
-
-  //   timerRef.current = setTimeout(() => {
-  //     console.log("검색어 요청:", inputValue);
-  //   }, 300)
-  // };
+  };
 
   return (
     <>
@@ -138,6 +125,7 @@ function App() {
           <div className="input-area">
             <input role="combobox" name="inputValue" value={inputValue} onChange={({ target: { value } }) => {
               setInputValue(value);
+              debounce(value);
             }}
               onKeyDown={handleKeyDown}
             />
